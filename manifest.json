@@ -1,0 +1,35 @@
+{
+	"manifest_version": 2,
+	"version": "0.2.1.0",
+	"name": "FindClickPice",
+	"short_name": "FindClickPice",
+	"description": "FindClickPice widget",
+	"permissions": ["<all_urls>", "tabs", "notifications", "storage", "unlimitedStorage", "downloads", "activeTab"],
+	"icons": {
+		"16": "assets/favicon.png",
+		"48": "assets/favicon.png",
+		"128": "assets/favicon.png"
+	},
+	"browser_action": {
+		"default_icon": {
+			"19": "assets/favicon.png",
+			"38": "assets/favicon.png"
+		},
+		"default_title": "Web Scraper",
+		"default_popup": "popup.html"
+	},
+	"content_security_policy": "script-src 'self' 'unsafe-eval'; object-src 'self'",
+	"background": {
+		"scripts": [
+			"background.js"
+		]
+	},
+	"web_accessible_resources": [
+	],
+  "content_scripts": [
+    {
+      "matches": [ "*://*/*" ],
+      "js": [ "background.js" ]
+    }
+  ]
+}
