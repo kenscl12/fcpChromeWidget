@@ -11,41 +11,46 @@ function getSearchUrl(url) {
 function getPopupStyle() {
     var style = "<style type='text/css'>";
     style += BUTTON_POPUP_HOVER_STYLE;
-    var css = "position: fixed; z-index: 9999999; height: 40px; width: 40px; background-position: center center";
-    css += "background-repeat: no-repeat; font-size: 14px; cursor: pointer; text-align: center; line-height: 45px; border-radius: 6px; cursor: pointer; transition: opacity 0.4s;";
+    var css = "position: absolute; z-index: 9999999; height: 40px; width: 40px;";
+    css += "background-repeat: no-repeat; font-size: 14px; text-align: center; line-height: 45px; border-radius: 6px; cursor: pointer;";
     css += BUTTON_POPUP_CSS;
     style += "#" + BUTTON_POPUP_ID + " {" + css + "}";
     style += "</style>";
     return style;
 }
 
-function getElementCssStyle(elemTop, elemLeft) {
-    var css = "";
-    var top = elemTop + 15;
-    css += "top: " + top + "px;";
-    var left = elemLeft + 15;
-    css += "left: " + left + "px;";
-    return css;
+function getPopupCoordsHorizontal(currentImgX) {
+    var left = currentImgX + 15;
+    return left + "px";
 }
 
-function imageMouseOverEvent(img) {
-    if (document.getElementById(BUTTON_POPUP_ID))
+function getPopupCoordsVertical(currentImgY) {
+    var top = currentImgY + 15;
+    return top + "px";
+}
+
+function getPopupHtml() {
+    return "<a id='" + BUTTON_POPUP_ID + "' target='_blank'></a>";
+}
+
+function imageMouseOverEvent(src, x, y) {
+    var imgPopup = document.getElementById(BUTTON_POPUP_ID);
+    if (!imgPopup || imgPopup.style.display === 'block')
         return;
 
-    var currentImage = img.currentTarget;
+    imgPopup.style.top = getPopupCoordsVertical(y);
+    imgPopup.style.left = getPopupCoordsHorizontal(x);
+    imgPopup.style.display = 'block';
+    imgPopup.href = getSearchUrl(src);
+}
 
-    var currentImageHtml = currentImage.outerHTML;
-
-    var style = getElementCssStyle(currentImage.y, currentImage.x);
-    var link = "<a href='" + getSearchUrl(currentImage.src) +  "' id='" + BUTTON_POPUP_ID + "' target='_blank' style='" + style + "'></a>";
-
-    document.body.innerHTML = document.body.innerHTML + link;
-
+function imageMouseOutEvent(img) {
     var imgPopup = document.getElementById(BUTTON_POPUP_ID);
-    imgPopup.addEventListener("mouseover", imagePopupMouseOverEvent);
-    imgPopup.addEventListener("mouseout", imagePopupMouseOutEvent);
 
-    imageAddEvent();
+    if (!imgPopup || imgPopup.style.display === 'none')
+        return;
+
+    imgPopup.style.display = 'none';
 }
 
 function imagePopupMouseOverEvent(imgPopup) {
@@ -56,28 +61,52 @@ function imagePopupMouseOutEvent(imgPopup) {
     imgPopup.currentTarget.className = imgPopup.currentTarget.className.replace( /(?:^|\s)findclickHover_(?!\S)/ , '' )
 }
 
-function imageMouseOutEvent(img) {
-    var currentImageEffect = document.getElementById(BUTTON_POPUP_ID);
+function vkFcpWidgetIntegration() {
+    document.body.innerHTML = document.body.innerHTML + getPopupStyle() + getPopupHtml();
+    var imgPopup = document.getElementById(BUTTON_POPUP_ID);
+    
+    imgPopup["onmouseover"] = test;
+}
 
-    if (!currentImageEffect)
+function siteFcpWidgetIntegration() {
+    var popupBlock = getPopupStyle() + getPopupHtml();
+    window.document.body.insertAdjacentHTML('beforeend', popupBlock);
+
+
+    var imgPopup = document.getElementById(BUTTON_POPUP_ID);
+    
+    if (imgPopup.addEventListener) {
+        imgPopup.addEventListener("mouseover", imagePopupMouseOverEvent, false);
+        imgPopup.addEventListener("mouseout", imagePopupMouseOutEvent, false);
+    }   
+}
+
+function backgroundImageToImageUrl(backgroundImage) {
+    if (!backgroundImage) {
+        return undefined;
+    }
+
+    return backgroundImage.slice(4, -1);
+}
+
+siteFcpWidgetIntegration();
+
+window.addEventListener("mouseover", function(event) {
+    if (typeof event.target.tagName == undefined) {
         return;
+    }
 
-    currentImageEffect.parentNode.removeChild(currentImageEffect);
-}
-   
-function imageAddEvent() {
-    var imgs = document.images;
-    for(img in imgs){
-        if(imgs.hasOwnProperty(img)){
-            imgs[img].addEventListener("mouseover", imageMouseOverEvent);
-            imgs[img].addEventListener("mouseout", imageMouseOutEvent);
-        }
-    } 
-}
+    if (event.target.tagName.toLowerCase() === "img" || event.target.id === BUTTON_POPUP_ID) {
+        imageMouseOverEvent(event.target.src, event.target.x, event.target.y);
+        return;
+    }
 
-function initializePlugin() {
-    document.body.innerHTML = document.body.innerHTML + getPopupStyle();
-    imageAddEvent();
-}
+    if (event.target.tagName.toLowerCase() === "a" && event.target.style.backgroundImage && event.target.style.backgroundImage.length > 0) {
+        var imageUrl = backgroundImageToImageUrl(event.target.style.backgroundImage);
+        var elementPosition = event.target.getBoundingClientRect();
+        imageMouseOverEvent(imageUrl, document.body.scrollLeft + elementPosition.left, document.body.scrollTop + elementPosition.top);
+        return;
+    }
 
-window.onload = initializePlugin;
+    imageMouseOutEvent(event);
+}, false);
