@@ -5,5 +5,10 @@
 </head>
 <body style="width: 100px; height: 50px;">
 <div>For the plug-in to work on the image. The icon in the upper left corner appears. Point to it.</div>
+<script type="text/javascript">
+    chrome.browserAction.onClicked.addListener(function(tab) {
+        console.log('working?');
+    });
+</script>
 </body>
 </html>
