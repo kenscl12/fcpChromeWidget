@@ -7,7 +7,15 @@ var LOCAL_STORAGE_ELEMENT_NAME = 'fcpChromeWidgetOn';
 var storage = chrome.storage.local;
 
 function getSearchUrl(url) {
-    return BASE_URL + url;
+    return BASE_URL + transformToUrlParameter(url);
+}
+
+function transformToUrlParameter(str) {
+    if (!str) {
+        return undefined;
+    }
+
+    return str.replace(/['"]+/g, '');
 }
 
 function getPopupStyle() {
